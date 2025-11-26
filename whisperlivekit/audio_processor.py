@@ -1,14 +1,20 @@
 import asyncio
-import numpy as np
-from time import time
 import logging
 import traceback
-from typing import Optional, Union, List, Any, AsyncGenerator
-from whisperlivekit.timed_objects import ASRToken, Silence, Line, FrontData, State, Transcript, ChangeSpeaker
-from whisperlivekit.core import TranscriptionEngine, online_factory, online_diarization_factory, online_translation_factory
-from whisperlivekit.silero_vad_iterator import FixedVADIterator
+from time import time
+from typing import Any, AsyncGenerator, List, Optional, Union
+
+import numpy as np
+
+from whisperlivekit.core import (TranscriptionEngine,
+                                 online_diarization_factory, online_factory,
+                                 online_translation_factory)
 from whisperlivekit.ffmpeg_manager import FFmpegManager, FFmpegState
+from whisperlivekit.silero_vad_iterator import FixedVADIterator
+from whisperlivekit.timed_objects import (ASRToken, ChangeSpeaker, FrontData,
+                                          Line, Silence, State, Transcript)
 from whisperlivekit.tokens_alignment import TokensAlignment
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -603,16 +609,16 @@ class AudioProcessor:
             res = self.vac(pcm_array)
 
         if res is not None:
-            silence_detected = res.get("end", 0) > res.get("start", 0)
-            if silence_detected and not self.current_silence:
+            if "start" in res and self.current_silence:
+                await self._end_silence()
+            
+            if "end" in res and not self.current_silence:
                 pre_silence_chunk = self._slice_before_silence(
                     pcm_array, chunk_sample_start, res.get("end")
                 )
                 if pre_silence_chunk is not None and pre_silence_chunk.size > 0:
                     await self._enqueue_active_audio(pre_silence_chunk)
                 await self._begin_silence()
-            elif self.current_silence:
-                await self._end_silence()
 
         if not self.current_silence:
             await self._enqueue_active_audio(pcm_array)

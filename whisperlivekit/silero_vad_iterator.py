@@ -1,7 +1,8 @@
-import torch
-import numpy as np
 import warnings
 from pathlib import Path
+
+import numpy as np
+import torch
 
 """
 Code is adapted from silero-vad v6: https://github.com/snakers4/silero-vad
@@ -123,7 +124,7 @@ def load_silero_vad(model_path: str = None, onnx: bool = False, opset_version: i
         raise Exception(f'Available ONNX opset_version: {available_ops}')
     if model_path is None:
         current_dir = Path(__file__).parent
-        data_dir = current_dir / 'vad_models'
+        data_dir = current_dir / 'silero_vad_models'
         
         if onnx:
             if opset_version == 16:
@@ -138,7 +139,7 @@ def load_silero_vad(model_path: str = None, onnx: bool = False, opset_version: i
         if not model_path.exists():
             raise FileNotFoundError(
                 f"Model file not found: {model_path}\n"
-                f"Please ensure the whisperlivekit/vad_models/ directory contains the model files."
+                f"Please ensure the whisperlivekit/silero_vad_models/ directory contains the model files."
             )
     else:
         model_path = Path(model_path)
@@ -276,8 +277,10 @@ class FixedVADIterator(VADIterator):
             elif r is not None:
                 if "end" in r:
                     ret["end"] = r["end"]
-                if "start" in r and "end" in ret:
-                    del ret["end"]
+                if "start" in r:
+                    ret["start"] = r["start"]
+                    if "end" in ret:
+                        del ret["end"]
         return ret if ret != {} else None
 
 

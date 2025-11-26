@@ -1,6 +1,7 @@
 
 from argparse import ArgumentParser
 
+
 def parse_args():
     parser = ArgumentParser(description="Whisper FastAPI Online Server")
     parser.add_argument(
@@ -295,14 +296,6 @@ def parse_args():
         help="Direct path to the SimulStreaming Whisper .pt model file. Overrides --model for SimulStreaming backend.",
     )
     
-    simulstreaming_group.add_argument(
-        "--preload-model-count",
-        type=int,
-        default=1,
-        dest="preload_model_count",
-        help="Optional. Number of models to preload in memory to speed up loading (set up to the expected number of concurrent instances).",
-    )
-
     simulstreaming_group.add_argument(
         "--nllb-backend",
         type=str,

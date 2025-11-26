@@ -1,9 +1,11 @@
+import logging
+import sys
+from argparse import Namespace
+
+from whisperlivekit.local_agreement.online_asr import OnlineASRProcessor
 from whisperlivekit.local_agreement.whisper_online import backend_factory
 from whisperlivekit.simul_whisper import SimulStreamingASR
-from whisperlivekit.local_agreement.online_asr import OnlineASRProcessor
-from argparse import Namespace
-import sys
-import logging
+
 
 def update_with_kwargs(_dict, kwargs):
     _dict.update({
@@ -80,6 +82,7 @@ class TranscriptionEngine:
         
         if self.args.vac:
             from whisperlivekit.silero_vad_iterator import load_silero_vad
+
             # Use ONNX if specified, otherwise use JIT (default)
             use_onnx = kwargs.get('vac_onnx', False)
             self.vac_model = load_silero_vad(onnx=use_onnx)
@@ -100,7 +103,6 @@ class TranscriptionEngine:
                     "init_prompt": None,
                     "static_init_prompt": None,
                     "max_context_tokens": None,
-                    "preload_model_count": 1,
                 }
                 simulstreaming_params = update_with_kwargs(simulstreaming_params, kwargs)
                 
@@ -135,7 +137,8 @@ class TranscriptionEngine:
 
         if self.args.diarization:
             if self.args.diarization_backend == "diart":
-                from whisperlivekit.diarization.diart_backend import DiartDiarization
+                from whisperlivekit.diarization.diart_backend import \
+                    DiartDiarization
                 diart_params = {
                     "segmentation_model": "pyannote/segmentation-3.0",
                     "embedding_model": "pyannote/embedding",
@@ -146,7 +149,8 @@ class TranscriptionEngine:
                     **diart_params
                 )
             elif self.args.diarization_backend == "sortformer":
-                from whisperlivekit.diarization.sortformer_backend import SortformerDiarization
+                from whisperlivekit.diarization.sortformer_backend import \
+                    SortformerDiarization
                 self.diarization_model = SortformerDiarization()
         
         self.translation_model = None
@@ -182,7 +186,8 @@ def online_diarization_factory(args, diarization_backend):
         # Not the best here, since several user/instances will share the same backend, but diart is not SOTA anymore and sortformer is recommended
     
     if args.diarization_backend == "sortformer":
-        from whisperlivekit.diarization.sortformer_backend import SortformerDiarizationOnline
+        from whisperlivekit.diarization.sortformer_backend import \
+            SortformerDiarizationOnline
         online = SortformerDiarizationOnline(shared_model=diarization_backend)
     return online
 

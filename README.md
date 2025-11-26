@@ -51,9 +51,11 @@ pip install whisperlivekit
 2. **Open your browser** and navigate to `http://localhost:8000`. Start speaking and watch your words appear in real-time!
 
 
-> - See [tokenizer.py](https://github.com/QuentinFuxa/WhisperLiveKit/blob/main/whisperlivekit/simul_whisper/whisper/tokenizer.py) for the list of all available languages.
-> - For HTTPS requirements, see the **Parameters** section for SSL configuration options.
+> - See [here](https://github.com/QuentinFuxa/WhisperLiveKit/blob/main/whisperlivekit/simul_whisper/whisper/tokenizer.py) for the list of all available languages.
+> - Check the [troubleshooting guide](docs/troubleshooting.md) for step-by-step fixes collected from recent GPU setup/env issues.
 > - The CLI entry point is exposed as both `wlk` and `whisperlivekit-server`; they are equivalent.
+> - For HTTPS requirements, see the **Parameters** section for SSL configuration options.
+
 
 #### Use it to capture audio from web pages.
 
@@ -96,11 +98,13 @@ wlk --host 0.0.0.0 --port 80 --model medium --diarization --language fr
 **Python API Integration**: Check [basic_server](https://github.com/QuentinFuxa/WhisperLiveKit/blob/main/whisperlivekit/basic_server.py) for a more complete example of how to use the functions and classes.
 
 ```python
-from whisperlivekit import TranscriptionEngine, AudioProcessor, parse_args
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-from contextlib import asynccontextmanager
-import asyncio
+
+from whisperlivekit import AudioProcessor, TranscriptionEngine, parse_args
 
 transcription_engine = None
 
@@ -146,8 +150,8 @@ async def websocket_endpoint(websocket: WebSocket):
 | `--diarization` | Enable speaker identification | `False` |
 | `--backend-policy` | Streaming strategy: `1`/`simulstreaming` uses AlignAtt SimulStreaming, `2`/`localagreement` uses the LocalAgreement policy | `simulstreaming` |
 | `--backend` | Whisper implementation selector. `auto` picks MLX on macOS (if installed), otherwise Faster-Whisper, otherwise vanilla Whisper. You can also force `mlx-whisper`, `faster-whisper`, `whisper`, or `openai-api` (LocalAgreement only) | `auto` |
-| `--no-vac` | Disable Voice Activity Controller | `False` |
-| `--no-vad` | Disable Voice Activity Detection | `False` |
+| `--no-vac` | Disable Voice Activity Controller. NOT ADVISED | `False` |
+| `--no-vad` | Disable Voice Activity Detection. NOT ADVISED | `False` |
 | `--warmup-file` | Audio file path for model warmup | `jfk.wav` |
 | `--host` | Server host address | `localhost` |
 | `--port` | Server port | `8000` |
@@ -183,7 +187,6 @@ async def websocket_endpoint(websocket: WebSocket):
 | `--init-prompt` | Initial prompt for the model | `None` |
 | `--static-init-prompt` | Static prompt that doesn't scroll | `None` |
 | `--max-context-tokens` | Maximum context tokens | `None` |
-| `--preload-model-count` | Optional. Number of models to preload in memory to speed up loading (set up to the expected number of concurrent users) | `1` |
 
 
 
