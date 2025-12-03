@@ -7,7 +7,7 @@ from typing import List
 import numpy as np
 import soundfile as sf
 
-from whisperlivekit.model_paths import model_path_and_type, resolve_model_path
+from whisperlivekit.model_paths import detect_model_format, resolve_model_path
 from whisperlivekit.timed_objects import ASRToken
 from whisperlivekit.whisper.transcribe import transcribe as whisper_transcribe
 
@@ -16,9 +16,10 @@ class ASRBase:
     sep = " "  # join transcribe words with this character (" " for whisper_timestamped,
               # "" for faster-whisper because it emits the spaces when needed)
 
-    def __init__(self, lan, model_size=None, cache_dir=None, model_dir=None, logfile=sys.stderr):
+    def __init__(self, lan, model_size=None, cache_dir=None, model_dir=None, lora_path=None, logfile=sys.stderr):
         self.logfile = logfile
         self.transcribe_kargs = {}
+        self.lora_path = lora_path
         if lan == "auto":
             self.original_language = None
         else:
@@ -47,24 +48,23 @@ class WhisperASR(ASRBase):
     sep = " "
 
     def load_model(self, model_size=None, cache_dir=None, model_dir=None):
-        from whisperlivekit.whisper import load_model as load_model
+        from whisperlivekit.whisper import load_model as load_whisper_model
 
         if model_dir is not None:
-            resolved_path = resolve_model_path(model_dir)
+            resolved_path = resolve_model_path(model_dir)            
             if resolved_path.is_dir():
-                pytorch_path, _, _ = model_path_and_type(resolved_path)
-                if pytorch_path is None:
+                model_info = detect_model_format(resolved_path)
+                if not model_info.has_pytorch:
                     raise FileNotFoundError(
                         f"No supported PyTorch checkpoint found under {resolved_path}"
-                    )
-                resolved_path = pytorch_path
+                    )            
             logger.debug(f"Loading Whisper model from custom path {resolved_path}")
-            return load_model(str(resolved_path))
+            return load_whisper_model(str(resolved_path), lora_path=self.lora_path)
 
         if model_size is None:
             raise ValueError("Either model_size or model_dir must be set for WhisperASR")
 
-        return load_model(model_size, download_root=cache_dir)
+        return load_whisper_model(model_size, download_root=cache_dir, lora_path=self.lora_path)
 
     def transcribe(self, audio, init_prompt=""):
         options = dict(self.transcribe_kargs)
