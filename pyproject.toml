@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "whisperlivekit"
-version = "0.2.16.dev0"
+version = "0.2.17"
 description = "Real-time speech-to-text with speaker diarization using Whisper"
 readme = "README.md"
 authors = [
@@ -35,6 +35,7 @@ dependencies = [
     "torchaudio>=2.0.0",
     "torch>=2.0.0",
     "huggingface-hub>=0.25.0",
+    "faster-whisper>=1.2.0",
     "tqdm",
     "tiktoken",
     'triton>=2.0.0; platform_machine == "x86_64" and (sys_platform == "linux" or sys_platform == "linux2")'
