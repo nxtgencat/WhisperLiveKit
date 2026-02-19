@@ -46,8 +46,6 @@ class SimulStreamingOnlineProcessor:
         self.logfile = logfile
         self.end = 0.0
         self.buffer = []
-        self.committed: List[ASRToken] = []
-        self.last_result_tokens: List[ASRToken] = []        
         self.model = self._create_alignatt()
         
         if asr.tokenizer:
@@ -122,7 +120,6 @@ class SimulStreamingOnlineProcessor:
                 self.buffer.extend(timestamped_words)
                 return [], self.end
             
-            self.committed.extend(timestamped_words)
             self.buffer = []
             return timestamped_words, self.end
         except Exception as e:
@@ -217,7 +214,7 @@ class SimulStreamingASR:
                 cif_ckpt_path=self.cif_ckpt_path,
                 decoder_type="beam",
                 beam_size=self.beams,
-                task=self.direct_english_translation,
+                task="translate" if self.direct_english_translation else "transcribe",
                 never_fire=self.never_fire,
                 init_prompt=self.init_prompt,
                 max_context_tokens=self.max_context_tokens,
@@ -330,7 +327,7 @@ class SimulStreamingASR:
         lora_path = getattr(self, 'lora_path', None)
         whisper_model = load_model(
             name=model_ref,
-            download_root=None,
+            download_root=getattr(self, 'model_cache_dir', None),
             decoder_only=self.fast_encoder,
             custom_alignment_heads=self.custom_alignment_heads,
             lora_path=lora_path,
@@ -353,7 +350,7 @@ class SimulStreamingASR:
     def set_translate_task(self):
         """Set up translation task."""
         if self.cfg.language == 'auto':
-            raise Exception('Translation cannot be done with language = auto')
+            raise ValueError('Translation cannot be done with language = auto')
         return tokenizer.get_tokenizer(
             multilingual=True,
             language=self.cfg.language,

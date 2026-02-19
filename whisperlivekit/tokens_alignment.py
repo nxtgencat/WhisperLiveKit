@@ -53,7 +53,8 @@ class TokensAlignment:
             segment.translation = ''
         for ts in self.all_translation_segments:
             if ts.is_within(segment):
-                segment.translation += ts.text + (self.sep if ts.text else '')
+                if ts.text:
+                    segment.translation += ts.text + self.sep
             elif segment.translation:
                 break
 
@@ -185,11 +186,11 @@ class TokensAlignment:
         else:
             diarization_buffer = ''
             for token in self.new_tokens:
-                if token.is_silence():
+                if isinstance(token, Silence):
                     if self.current_line_tokens:
-                        self.validated_segments.append(Segment().from_tokens(self.current_line_tokens))
+                        self.validated_segments.append(Segment.from_tokens(self.current_line_tokens))
                         self.current_line_tokens = []
-                    
+
                     end_silence = token.end if token.has_ended else time() - self.beg_loop
                     if self.validated_segments and self.validated_segments[-1].is_silence():
                         self.validated_segments[-1].end = end_silence
@@ -203,7 +204,7 @@ class TokensAlignment:
             
             segments = list(self.validated_segments)
             if self.current_line_tokens:
-                segments.append(Segment().from_tokens(self.current_line_tokens))
+                segments.append(Segment.from_tokens(self.current_line_tokens))
 
         if current_silence:
             end_silence = current_silence.end if current_silence.has_ended else time() - self.beg_loop

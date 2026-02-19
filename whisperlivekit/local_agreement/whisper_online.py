@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import platform
-import sys
 import time
-from functools import lru_cache
-
-import librosa
-import numpy as np
 
 from whisperlivekit.backend_support import (faster_backend_available,
                                             mlx_backend_available)
@@ -146,6 +141,7 @@ def backend_factory(
 
     if direct_english_translation:
         tgt_language = "en"  # Whisper translates into English
+        asr.transcribe_kargs["task"] = "translate"
     else:
         tgt_language = lan  # Whisper transcribes in this language
 
@@ -154,9 +150,9 @@ def backend_factory(
         tokenizer = create_tokenizer(tgt_language)
     else:
         tokenizer = None
-    
+
     warmup_asr(asr, warmup_file)
-    
+
     asr.confidence_validation = confidence_validation
     asr.tokenizer = tokenizer
     asr.buffer_trimming = buffer_trimming
